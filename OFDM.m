@@ -38,7 +38,6 @@ for M = etats
         
         %%% Prefixe cyclique
         x_cp = [x_ifft(:,end-Ncp+1:end) x_ifft]; % Ajout du prefixe cyclique de taille Ncp
-        %x_cp = reshape(x_cp,1,Ntrame*(Ncp+NFFT));
         
         
         %%%%%%%%%% Canal
@@ -64,11 +63,8 @@ for M = etats
         
         %%%%%%%%%%%%  Recepteur
         
-        
-        %%% Suppression du CP
-        %y_cp = reshape(reception,NFFT+Ncp,Ntrame);
+
         y_cp = reception(:,(Ncp+1):end);
-        %y_cp = reshape(y_cp,Ntrame,NFFT);
         
         
         %%% FFT
@@ -80,23 +76,11 @@ for M = etats
         Wzf = conj(H)./(abs(H).^2);
         Wmmse = conj(H)./(abs(H).^2+(1/(EsNo)));
         
-        %y_eq_zf = y_fft.*repmat(Wzf,1,Ntrame);
-        %y_eq_mmse = y_fft.*repmat(Wmmse,1,Ntrame);
-        
         y_eq_zf = y_fft.*repmat(Wzf,Ntrame,1);
         y_eq_mmse = y_fft.*repmat(Wmmse,Ntrame,1);
         
         y_eq_zf = reshape(y_eq_zf,1,N);
         y_eq_mmse = reshape(y_eq_mmse,1,N);
-        
-        
-%         %%% IFFT
-%         ifft_zf = ifft(y_eq_zf,NFFT,2);
-%         ifft_mmse = ifft(y_eq_mmse,NFFT,2);
-%         
-%         
-%         ifft_zf = reshape(ifft_zf,1,N);
-%         ifft_mmse = reshape(ifft_mmse,1,N);
         
         
         %%% Decision
@@ -112,8 +96,9 @@ for M = etats
         [dim1,dim2] = size(bits);
         TEB_zf(i) = nb_erreur_zf / (dim1*dim2);
         TEB_mmse(i) = nb_erreur_mmse / (dim1*dim2);
-%%        
+        
         i= i+1;
+        
     end
     
     semilogy(echelle,TEB_mmse,couleur(j))

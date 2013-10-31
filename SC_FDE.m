@@ -5,7 +5,7 @@ close all
 %%% Constantes
 NFFT = 512;     % nb de symbole par bloc
 Ntrame = 10 ;   % nb de trames
-N = NFFT*Ntrame;       % nb de symboles QAM
+N = NFFT*Ntrame;% nb de symboles QAM
 Ncp = 32;       % longueur du prefixe
 
 
@@ -35,7 +35,6 @@ for M = etats
         %%% Prefixe cyclique
         x_cp = reshape(x,Ntrame,NFFT);
         x_cp = [x_cp(:,end-Ncp+1:end) x_cp]; % Ajout du prefixe cyclique de taille Ncp
-        %x_cp = reshape(x_cp,1,Ntrame*(Ncp+NFFT));
         
         
         %%%%%%%%%% Canal
@@ -63,9 +62,7 @@ for M = etats
         
         
         %%% Suppression du CP
-        %y_cp = reshape(reception,NFFT+Ncp,Ntrame);
         y_cp = reception(:,(Ncp+1):end);
-        %y_cp = reshape(y_cp,Ntrame,NFFT);
         
         
         %%% FFT
@@ -76,9 +73,6 @@ for M = etats
         H = fft(canal,NFFT);
         Wzf = conj(H)./(abs(H).^2);
         Wmmse = conj(H)./(abs(H).^2+(1/(EsNo)));
-        
-        %y_eq_zf = y_fft.*repmat(Wzf,1,Ntrame);
-        %y_eq_mmse = y_fft.*repmat(Wmmse,1,Ntrame);
         
         y_eq_zf = y_fft.*repmat(Wzf,Ntrame,1);
         y_eq_mmse = y_fft.*repmat(Wmmse,Ntrame,1);
@@ -106,7 +100,7 @@ for M = etats
         [dim1,dim2] = size(bits);
         TEB_zf(i) = nb_erreur_zf / (dim1*dim2);
         TEB_mmse(i) = nb_erreur_mmse / (dim1*dim2);
-%%        
+        
         i= i+1;
     end
     
