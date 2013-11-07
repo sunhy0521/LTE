@@ -9,32 +9,37 @@ N = NFFT*Ntrame;% nb de symboles QAM
 Ncp = 32;       % longueur du prefixe
 
 
-%%%%%%%% Emetteur
-
 j=1;
 etats = [4 8 16 32 64];
 couleur = ['r' 'g' 'b' 'm' 'k'];
 
+echelle = 0:100;    %EsNo en dB
+TEB_zf = zeros(length(etats),length(echelle));
+TEB_mmse = zeros(length(etats),length(echelle));
+EbNo = zeros(length(echelle));
+
 for M = etats
     
-    %%% Modulateur QAM
-    mapping = modem.qammod('M',M,'SymbolOrder','Gray','Input','Bit');
     
     i=1;
-    echelle = 0:100;
-    TEB_zf = zeros(1,length(echelle));
-    TEB_mmse = zeros(1,length(echelle));
     
-    for EsNo = echelle
+    
+    for EsNo = echelle %en dB
         
+        
+        %%%%%%%% Emetteur
+        
+        
+        %%% Modulateur QAM
+        mapping = modem.qammod('M',M,'SymbolOrder','Gray','Input','Bit');
         %%% Modulation
         bits = randi([0 1],log2(M),N);
         x = modulate(mapping,bits);
         
         
         %%% Prefixe cyclique
-        x_cp = reshape(x,Ntrame,NFFT);
-        x_cp = [x_cp(:,end-Ncp+1:end) x_cp]; % Ajout du prefixe cyclique de taille Ncp
+        x_tmp = reshape(x,Ntrame,NFFT);
+        x_cp = [x_tmp(:,end-Ncp+1:end) x_tmp]; % Ajout du prefixe cyclique de taille Ncp
         
         
         %%%%%%%%%% Canal
@@ -44,7 +49,7 @@ for M = etats
         Ha = [0.004,-0.05,0.07,-0.21,-0.5,0.75,0.36,0,0.21,0.03,0.07];
         Hb = [0.407,0.812,0.407];
         Hc = [0.227,0.46,0.688,0.460,0.227];
-        canal = Ha;
+        canal = Hc;
         
         
         %%% Canal AWGN
@@ -53,7 +58,7 @@ for M = etats
         bruitI = sqrt(sigma1).*randn(dim1,dim2);
         bruitQ = sqrt(sigma1).*randn(dim1,dim2);
         bruit = bruitI + 1j*bruitQ;
-
+        
         
         reception = filter(canal,1,x_cp,[],2) + bruit;
         
@@ -98,13 +103,14 @@ for M = etats
         nb_erreur_zf = sum(sum(decision_zf~=bits));
         nb_erreur_mmse = sum(sum(decision_mmse~=bits));
         [dim1,dim2] = size(bits);
-        TEB_zf(i) = nb_erreur_zf / (dim1*dim2);
-        TEB_mmse(i) = nb_erreur_mmse / (dim1*dim2);
+        TEB_zf(j,i) = nb_erreur_zf / (dim1*dim2) ;
+        TEB_mmse(j,i) = nb_erreur_mmse / (dim1*dim2);
         
         i= i+1;
     end
     
-    semilogy(echelle,TEB_mmse,couleur(j))
+    EbNo(j,:) = echelle/log2(M);
+    semilogy(EbNo(j,:),TEB_zf(j,:),couleur(j))
     
     hold on
     j= j+1;
@@ -112,9 +118,9 @@ for M = etats
 end
 
 hold off
-xlabel('Es/No');
+xlabel('Eb/No');
 ylabel('TEB');
 legend('4-QAM','8-QAM','16-QAM','32-QAM','64-QAM');
 title('SC-FDE avec ZF');
 
-save('SCFDE.mat','TEB_zf','TEB_mmse')
+save('SCFDE_C.mat','TEB_zf','TEB_mmse','EbNo')
